@@ -17,6 +17,7 @@ WITH tab AS (
     LEFT JOIN
         leads AS l
         ON s.visitor_id = l.visitor_id AND s.visit_date <= l.created_at
+    WHERE s.medium IN ('cpc', 'cpm', 'cpa', 'youtube', 'cpp', 'tg', 'social')
 )
 
 SELECT
@@ -33,7 +34,6 @@ SELECT
 FROM tab
 WHERE
     row_n = 1
-    AND medium IN ('cpc', 'cpm', 'cpa', 'youtube', 'cpp', 'tg', 'social')
 ORDER BY
     amount DESC NULLS LAST, visit_date ASC, source ASC, medium ASC, campaign ASC
 LIMIT 10
