@@ -12,7 +12,7 @@ WITH tab AS (
         l.status_id,
         to_char(s.visit_date, 'yyyy-mm-dd') AS visit_date,
         row_number()
-            OVER (PARTITION BY s.visitor_id ORDER BY s.visit_date DESC)
+        OVER (PARTITION BY s.visitor_id ORDER BY s.visit_date DESC)
         AS row_n
     FROM sessions AS s
     LEFT JOIN

@@ -1,12 +1,10 @@
--- Сколько уникальных пользователей заходят на сайт за весь период (visitors_count)
+--Уникальные пользователи за весь период (visitors_count)
 SELECT count(DISTINCT visitor_id) AS visitors_count
-FROM sessions
-
+FROM sessions;
 
 -- Сколько лидов приходят (count_leads)
 SELECT count(DISTINCT lead_id) AS leads_count
-FROM leads
-
+FROM leads;
 
 -- Сколько уникальных пользователей и лидов, которые заходят на сайт по платным каналам (conversion)
 -- Конверсия из клика в лид и из лида в оплату расчитывается непосредственно в самом дашборде 
@@ -42,8 +40,7 @@ SELECT
     count(DISTINCT lead_id) FILTER (WHERE status_id = 142) AS leads_paid_count
 FROM tab
 WHERE row_n = 1
-GROUP BY to_char(visit_date, 'yyyy-mm-dd')::date, source, medium, campaign
-
+GROUP BY to_char(visit_date, 'yyyy-mm-dd')::date, source, medium, campaign;
 
 -- Какие каналы приводят на сайт пользователей? Хочется видеть по дням/неделям/месяцам
 -- Количество посещений на сайте по дням (visits_count_for_day)
@@ -55,8 +52,7 @@ SELECT
     count(DISTINCT visitor_id) AS visitors_count
 FROM sessions
 GROUP BY to_char(visit_date, 'yyyy-mm-dd')::date, source, medium, campaign
-ORDER BY visit_day ASC, visitors_count DESC
-
+ORDER BY visit_day ASC, visitors_count DESC;
 
 -- Количество посещений на сайте с разбивкой по каналам - платным (visits_count_source_no_organic)
 SELECT
@@ -68,9 +64,7 @@ SELECT
 FROM sessions
 WHERE medium != 'organic'
 GROUP BY to_char(visit_date, 'yyyy-mm-dd')::date, source, medium, campaign
-ORDER BY visit_day ASC, visitors_count DESC
-
-
+ORDER BY visit_day ASC, visitors_count DESC;
 
 --Сколько мы тратим по разным каналам в динамике? (cost)
 --Окупаются ли каналы?  расчитывается непосредственно в самом дашборде
@@ -157,9 +151,8 @@ ORDER BY
     visitors_count DESC,
     source ASC,
     medium ASC,
-    campaign ASC 
-    
-    
+    campaign ASC;
+
 --расчет корреляции (correl)
     WITH organic AS (
     SELECT
@@ -185,8 +178,7 @@ SELECT
     p.paid_visitors_count
 FROM organic AS o
 LEFT JOIN paid AS p ON o.visit_day = p.visit_day
-ORDER BY o.visit_day
-    
+ORDER BY o.visit_day;
 
 --Посадочные страницы, которые наиболее часто посещают пользователи, пришедшие из рекламы (landing)
 WITH tab AS (
@@ -224,7 +216,4 @@ GROUP BY landing_page
 HAVING
     count(DISTINCT lead_id)::NUMERIC / count(DISTINCT visitor_id) * 100.00 > 0
 ORDER BY visitors_count DESC
-LIMIT 10
-
-
-
+LIMIT 10;
