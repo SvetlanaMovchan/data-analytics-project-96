@@ -11,7 +11,7 @@ WITH tab AS (
         l.closing_reason,
         l.status_id,
         row_number()
-            OVER (PARTITION BY s.visitor_id ORDER BY s.visit_date DESC)
+        OVER (PARTITION BY s.visitor_id ORDER BY s.visit_date DESC)
         AS row_n
     FROM sessions AS s
     LEFT JOIN
