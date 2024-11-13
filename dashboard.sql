@@ -6,8 +6,10 @@ FROM sessions;
 SELECT count(DISTINCT lead_id) AS leads_count
 FROM leads;
 
--- Сколько уникальных пользователей и лидов, которые заходят на сайт по платным каналам (conversion)
--- Конверсия из клика в лид и из лида в оплату расчитывается непосредственно в самом дашборде 
+-- Сколько уникальных пользователей и лидов, 
+--которые заходят на сайт по платным каналам (conversion)
+-- Конверсия из клика в лид и из лида в оплату,
+-- расчитывается непосредственно в самом дашборде 
 -- SUM(leads_count)::NUMERIC / SUM(visitors_count) 
 -- SUM(leads_paid_count)::NUMERIC / SUM(leads_count) 
 WITH tab AS (
@@ -21,7 +23,7 @@ WITH tab AS (
         l.created_at,
         l.status_id,
         row_number()
-            OVER (PARTITION BY s.visitor_id ORDER BY s.visit_date DESC)
+        OVER (PARTITION BY s.visitor_id ORDER BY s.visit_date DESC)
         AS row_n
     FROM sessions AS s
     LEFT JOIN
@@ -42,7 +44,7 @@ FROM tab
 WHERE row_n = 1
 GROUP BY to_char(visit_date, 'yyyy-mm-dd')::date, source, medium, campaign;
 
--- Какие каналы приводят на сайт пользователей? Хочется видеть по дням/неделям/месяцам
+-- Какие каналы приводят на сайт пользователей?
 -- Количество посещений на сайте по дням (visits_count_for_day)
 SELECT
     to_char(visit_date, 'yyyy-mm-dd')::date AS visit_day,
@@ -54,7 +56,7 @@ FROM sessions
 GROUP BY to_char(visit_date, 'yyyy-mm-dd')::date, source, medium, campaign
 ORDER BY visit_day ASC, visitors_count DESC;
 
--- Количество посещений на сайте с разбивкой по каналам - платным (visits_count_source_no_organic)
+-- Количество посещений по каналам платным (visits_count_source_no_organic)
 SELECT
     to_char(visit_date, 'yyyy-mm-dd')::date AS visit_day,
     source,
@@ -86,7 +88,7 @@ WITH tab AS (
         l.status_id,
         to_char(s.visit_date, 'yyyy-mm-dd')::date AS visit_date,
         row_number()
-            OVER (PARTITION BY s.visitor_id ORDER BY s.visit_date DESC)
+        OVER (PARTITION BY s.visitor_id ORDER BY s.visit_date DESC)
         AS row_n
     FROM sessions AS s
     LEFT JOIN
@@ -126,15 +128,15 @@ total AS (
 )
 
 SELECT
-    visit_date::date,
-    source,
-    medium,
-    campaign,
-    total_cost,
-    count(visitor_id) AS visitors_count,
-    count(lead_id) AS leads_count,
-    count(lead_id) FILTER (WHERE status_id = 142) AS purchases_count,
-    sum(amount) FILTER (WHERE status_id = 142) AS revenue
+    t.visit_date::date,
+    t.source,
+    t.medium,
+    t.campaign,
+    tl.total_cost,
+    count(t.visitor_id) AS visitors_count,
+    count(t.lead_id) AS leads_count,
+    count(t.lead_id) FILTER (WHERE t.status_id = 142) AS purchases_count,
+    sum(t.amount) FILTER (WHERE t.status_id = 142) AS revenue
 FROM tab AS t
 LEFT JOIN
     total AS tl
@@ -143,18 +145,18 @@ LEFT JOIN
         AND t.source = tl.utm_source
         AND t.medium = tl.utm_medium
         AND t.campaign = tl.utm_campaign
-WHERE row_n = 1
-GROUP BY visit_date, source, medium, campaign, total_cost
+WHERE t.row_n = 1
+GROUP BY t.visit_date, t.source, t.medium, t.campaign, tl.total_cost
 ORDER BY
     revenue DESC NULLS LAST,
-    visit_date ASC,
+    t.visit_date ASC,
     visitors_count DESC,
-    source ASC,
-    medium ASC,
-    campaign ASC;
+    t.source ASC,
+    t.medium ASC,
+    t.campaign ASC;
 
 --расчет корреляции (correl)
-    WITH organic AS (
+WITH organic AS (
     SELECT
         to_char(visit_date, 'yyyy-mm-dd')::date AS visit_day,
         count(DISTINCT visitor_id) AS organic_visitors_count
@@ -180,7 +182,8 @@ FROM organic AS o
 LEFT JOIN paid AS p ON o.visit_day = p.visit_day
 ORDER BY o.visit_day;
 
---Посадочные страницы, которые наиболее часто посещают пользователи, пришедшие из рекламы (landing)
+--Посадочные страницы, которые наиболее часто посещают 
+--пользователи, пришедшие из рекламы (landing)
 WITH tab AS (
     SELECT
         s.visitor_id,
@@ -192,7 +195,7 @@ WITH tab AS (
         l.created_at,
         l.status_id,
         row_number()
-            OVER (PARTITION BY s.visitor_id ORDER BY s.visit_date DESC)
+        OVER (PARTITION BY s.visitor_id ORDER BY s.visit_date DESC)
         AS row_n
     FROM sessions AS s
     LEFT JOIN
@@ -207,13 +210,13 @@ SELECT
     count(DISTINCT visitor_id) AS visitors_count,
     count(DISTINCT lead_id) AS leads_count,
     count(DISTINCT lead_id) FILTER (WHERE status_id = 142) AS leads_paid_count,
-    count(DISTINCT lead_id)::NUMERIC
+    count(DISTINCT lead_id)::numeric
     / count(DISTINCT visitor_id)
     * 100.00 AS conver
 FROM tab
 WHERE row_n = 1
 GROUP BY landing_page
 HAVING
-    count(DISTINCT lead_id)::NUMERIC / count(DISTINCT visitor_id) * 100.00 > 0
+    count(DISTINCT lead_id)::numeric / count(DISTINCT visitor_id) * 100.00 > 0
 ORDER BY visitors_count DESC
 LIMIT 10;
