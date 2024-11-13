@@ -53,9 +53,9 @@ total AS (
 
 SELECT
     visit_date,
-    source,
-    medium,
-    campaign,
+    source AS utm_source,
+    medium AS utm_medium,
+    campaign AS utm_campaign,
     total_cost,
     count(visitor_id) AS visitors_count,
     count(lead_id) AS leads_count,
@@ -69,7 +69,7 @@ LEFT JOIN
         AND t.source = tl.utm_source
         AND t.medium = tl.utm_medium
         AND t.campaign = tl.utm_campaign
-WHERE row_n =1
+WHERE row_n = 1
 GROUP BY visit_date, source, medium, campaign, total_cost
 ORDER BY
     revenue DESC NULLS LAST,
