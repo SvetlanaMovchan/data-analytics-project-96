@@ -49,33 +49,47 @@ total AS (
         utm_source,
         utm_medium,
         utm_campaign
+),
+
+finish AS (
+    SELECT
+        t.visit_date,
+        t.source AS utm_source,
+        t.medium AS utm_medium,
+        t.campaign AS utm_campaign,
+        tl.total_cost,
+        count(t.visitor_id) AS visitors_count,
+        count(t.lead_id) AS leads_count,
+        count(t.lead_id) FILTER (WHERE t.status_id = 142) AS purchases_count,
+        sum(t.amount) FILTER (WHERE t.status_id = 142) AS revenue
+    FROM tab AS t
+    LEFT JOIN
+        total AS tl
+        ON
+            t.visit_date = tl.campaign_date
+            AND t.source = tl.utm_source
+            AND t.medium = tl.utm_medium
+            AND t.campaign = tl.utm_campaign
+    WHERE t.row_n = 1
+    GROUP BY t.visit_date, t.source, t.medium, t.campaign, tl.total_cost
 )
 
 SELECT
-    visit_date,
-    count(visitor_id) AS visitors_count,
-    source AS utm_source,
-    medium AS utm_medium,
-    campaign AS utm_campaign,
-    total_cost,
-    count(lead_id) AS leads_count,
-    count(lead_id) FILTER (WHERE status_id = 142) AS purchases_count,
-    sum(amount) FILTER (WHERE status_id = 142) AS revenue
-FROM tab AS t
-LEFT JOIN
-    total AS tl
-    ON
-        t.visit_date = tl.campaign_date
-        AND t.source = tl.utm_source
-        AND t.medium = tl.utm_medium
-        AND t.campaign = tl.utm_campaign
-WHERE row_n = 1
-GROUP BY visit_date, source, medium, campaign, total_cost
+    f.visit_date,
+    f.visitors_count,
+    f.utm_source,
+    f.utm_medium,
+    f.utm_campaign,
+    f.total_cost,
+    f.leads_count,
+    f.purchases_count,
+    f.revenue
+FROM finish AS f
 ORDER BY
-    revenue DESC NULLS LAST,
-    visit_date ASC,
-    visitors_count DESC,
-    source ASC,
-    medium ASC,
-    campaign ASC
+    f.revenue DESC NULLS LAST,
+    f.visit_date ASC,
+    f.visitors_count DESC,
+    f.utm_source ASC,
+    f.utm_medium ASC,
+    f.utm_campaign ASC
 LIMIT 15
