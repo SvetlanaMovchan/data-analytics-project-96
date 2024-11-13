@@ -53,11 +53,11 @@ total AS (
 
 SELECT
     visit_date,
+    count(visitor_id) AS visitors_count,
     source AS utm_source,
     medium AS utm_medium,
     campaign AS utm_campaign,
     total_cost,
-    count(visitor_id) AS visitors_count,
     count(lead_id) AS leads_count,
     count(lead_id) FILTER (WHERE status_id = 142) AS purchases_count,
     sum(amount) FILTER (WHERE status_id = 142) AS revenue
